@@ -72,14 +72,42 @@ def basic_matches(args: Namespace) -> CsvData:
 )
 def _2019_match_climb_data(args: Namespace) -> CsvData:
     event_key = args.event_key
+    just_climb = getattr(args, 'just_climb', False)
     matches = TBA.get(f'/event/{event_key}/matches').json()
     matches = filter(lambda m: m['comp_level'] == 'qm', matches)
     teams = {team['key']: team['team_number'] for team in TBA.get(f'/event/{event_key}/teams/simple').json()}
-    result = [['Team #', 'Match #', 'Climb Level']]
+    result = [['Climb Level']] if just_climb else [['Team #', 'Match #', 'Climb Level']]
     for match in sorted(matches, key=lambda m: m['match_number']):
+        if match['score_breakdown'] is None:
+            continue
         for a in ['blue', 'red']:
             rows = _extract_tmc_row(teams, match, a)
-            if getattr(args, 'just_climb', False):
+            if just_climb:
+                rows = [r[2] for r in rows]
+            result.extend(rows)
+    return CsvData.new(result)
+
+
+@_dataset(
+    name='2019_match_fouls',
+    options=[
+        Option('--event-key', 'Event key.'),
+        Switch('--just-fouls', 'Extract just the foul data, no team/match info.')
+    ]
+)
+def _2019_match_fouls(args: Namespace) -> CsvData:
+    event_key = args.event_key
+    just_fouls = getattr(args, 'just_fouls', False)
+    matches = TBA.get(f'/event/{event_key}/matches').json()
+    matches = filter(lambda m: m['comp_level'] == 'qm', matches)
+    teams = {team['key']: team['team_number'] for team in TBA.get(f'/event/{event_key}/teams/simple').json()}
+    result = [['Fouls']] if just_fouls else [['Team #', 'Match #', 'Fouls']]
+    for match in sorted(matches, key=lambda m: m['match_number']):
+        if match['score_breakdown'] is None:
+            continue
+        for a in ['blue', 'red']:
+            rows = _extract_tmf_row(teams, match, a)
+            if just_fouls:
                 rows = [r[2] for r in rows]
             result.extend(rows)
     return CsvData.new(result)
@@ -92,6 +120,14 @@ def _extract_tmc_row(teams, match, alliance):
         for data in
         ((team_number, match['match_number'], asb[f'endgameRobot{i + 1}'])
          for i, team_number in enumerate(map(teams.get, match['alliances'][alliance]['team_keys'])))
+    ]
+
+
+def _extract_tmf_row(teams, match, alliance):
+    asb = match['score_breakdown'][alliance]
+    return [
+        (team_number, match['match_number'], asb['foulCount'])
+         for i, team_number in enumerate(map(teams.get, match['alliances'][alliance]['team_keys']))
     ]
 
 
