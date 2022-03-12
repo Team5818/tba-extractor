@@ -52,10 +52,10 @@ where
 #[derive(Clone, Copy, Deserialize)]
 pub enum RobotEndgameState {
     None,
-    Traversal,
     Low,
     Mid,
     High,
+    Traversal,
 }
 
 #[derive(Eq, PartialEq, Clone, Copy, Deserialize)]

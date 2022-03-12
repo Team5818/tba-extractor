@@ -10,4 +10,6 @@ pub enum TbaError {
     Io(#[from] std::io::Error),
     #[error("CSV write error: {0}")]
     CsvWrite(#[from] csv::Error),
+    #[error("Serde JSON reader error: {0}")]
+    JsonRead(#[from] serde_json::Error),
 }

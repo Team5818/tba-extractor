@@ -2,20 +2,21 @@ use serde::Deserialize;
 
 use crate::data::alliance::{Alliance, ByAlliance};
 
-pub fn simple_team_breakdown<SB, I>(matches: I) -> impl Iterator<Item = SimpleBreakdown<SB>>
-where
-    SB: Clone,
-    I: Iterator<Item = Match<SB>>,
+pub fn simple_team_breakdown<SB, I>(matches: I) -> impl Iterator<Item=SimpleBreakdown<SB>>
+    where
+        SB: Clone,
+        I: Iterator<Item=Match<SB>>,
 {
     matches
         .filter(|m| m.comp_level == MatchCompType::Qualification)
+        .filter_map(|Match {
+                         alliances,
+                         match_number,
+                         score_breakdown,
+                         ..
+                     }| score_breakdown.map(|sb| (alliances, match_number, sb)))
         .flat_map(
-            |Match {
-                 alliances,
-                 match_number,
-                 score_breakdown,
-                 ..
-             }| {
+            |(alliances, match_number, score_breakdown)| {
                 alliances
                     .into_iter()
                     .zip(score_breakdown.into_iter())
@@ -46,7 +47,7 @@ pub struct Match<SB> {
     pub alliances: ByAlliance<Alliance>,
     pub comp_level: MatchCompType,
     pub match_number: u32,
-    pub score_breakdown: ByAlliance<SB>,
+    pub score_breakdown: Option<ByAlliance<SB>>,
 }
 
 #[derive(Eq, PartialEq, Deserialize)]

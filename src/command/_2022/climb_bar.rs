@@ -40,7 +40,7 @@ impl TbaCommand for ClimbBar {
 
 #[derive(Serialize)]
 struct ClimbBarRow {
-    match_number: u32,
     team: u32,
+    match_number: u32,
     climb_bar: u32,
 }

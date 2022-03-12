@@ -40,7 +40,7 @@ impl TbaCommand for AutoTaxi {
 
 #[derive(Serialize)]
 struct AutoTaxiRow {
-    match_number: u32,
     team: u32,
+    match_number: u32,
     auto_taxi: bool,
 }

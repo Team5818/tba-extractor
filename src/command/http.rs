@@ -7,12 +7,14 @@ pub const TBA_URL: &str = "https://www.thebluealliance.com/api/v3";
 
 /// Extensions for reqwest.
 pub trait TbaReqwestExt {
-    fn tba_send_for_json<T: DeserializeOwned>(self) -> reqwest::Result<T>;
+    fn tba_send_for_json<T: DeserializeOwned>(self) -> Result<T, TbaError>;
 }
 
 impl TbaReqwestExt for reqwest::blocking::RequestBuilder {
-    fn tba_send_for_json<T: DeserializeOwned>(self) -> reqwest::Result<T> {
-        self.send()?.error_for_status()?.json()
+    fn tba_send_for_json<T: DeserializeOwned>(self) -> Result<T, TbaError> {
+        let res = self.send()?.error_for_status()?.text()?;
+        let r: T = serde_json::from_str(&res)?;
+        Ok(r)
     }
 }
 
